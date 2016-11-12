@@ -4,7 +4,7 @@ Hello
 TODO
 ----
 
-in no particular order.
+in no particular order:
 
 * simple web service
 * unit tests
