@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
 const filename = "motd_storage.json"
@@ -13,6 +14,7 @@ const filename = "motd_storage.json"
 var (
 	storagePath = filepath.Join(os.TempDir(), filename)
 	initialData = "quidquid Latine dictum sit altum videtur"
+	mutex       = sync.RWMutex{}
 )
 
 // Messages contains a list of all stored messages of the day
@@ -45,6 +47,12 @@ func parseFile(content []byte) (*data, error) {
 
 // Read returns current persisted messages
 func Read() (*[]string, error) {
+	mutex.RLock()
+	defer mutex.RUnlock()
+	return readFile()
+}
+
+func readFile() (*[]string, error) {
 	dat, err := ioutil.ReadFile(storagePath)
 	if err != nil {
 		return nil, err
@@ -73,7 +81,9 @@ func Add(message string) error {
 	if len(message) == 0 {
 		return errors.New("Empty message")
 	}
-	dat, err := Read()
+	mutex.Lock()
+	defer mutex.Unlock()
+	dat, err := readFile()
 	if err != nil {
 		return err
 	}

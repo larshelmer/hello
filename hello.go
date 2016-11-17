@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/larshelmer/hello/storage"
+	"github.com/larshelmer/hello/v1_api"
 )
 
 func oldHandler(w http.ResponseWriter, r *http.Request) {
@@ -18,8 +19,15 @@ func motdHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	fmt.Println("starting...")
+
+	storage.InitData("")
+	storage.Add("message1")
+	storage.Add("message2")
+	v1api.InitEndpoints()
+
 	http.Handle("/", http.FileServer(http.Dir("static")))
-	http.HandleFunc("/old", oldHandler)
-	http.HandleFunc("/motd", motdHandler)
+	//	http.HandleFunc("/old", oldHandler)
+	//	http.HandleFunc("/motd", motdHandler)
 	http.ListenAndServe(":8080", nil)
+	fmt.Println("stopping...")
 }

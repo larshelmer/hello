@@ -117,6 +117,22 @@ func TestAdd(t *testing.T) {
 	}
 }
 
+func TestAddMany(t *testing.T) {
+	InitData(testPath)
+	defer os.Remove(testPath)
+	in1 := "motd1"
+	in2 := "motd2"
+	Add(in1)
+	Add(in2)
+	want := data{[]string{initialData, in1, in2}}
+	got, _ := Read()
+	for ix := range want.Messages {
+		if want.Messages[ix] != (*got)[ix] {
+			t.Errorf("Read() == %q, want %q", got, want)
+		}
+	}
+}
+
 func TestInitData(t *testing.T) {
 	if _, err := os.Stat(testPath); err == nil {
 		os.Remove(testPath)
