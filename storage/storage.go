@@ -17,21 +17,30 @@ var (
 	mutex       = sync.RWMutex{}
 )
 
+// Datastore interface
+type Datastore interface {
+	InitData(path string) error
+	Read() (*[]string, error)
+	Add(message string) error
+}
+
+type storage struct{}
+
 // Messages contains a list of all stored messages of the day
 type data struct {
 	Messages []string `json:"messages"`
 }
 
 // InitData initializes storage
-func InitData(path string) error {
+func (s storage) InitData(path string) error {
 	if len(path) > 0 {
 		storagePath = path
 	}
-	dat, err := Read()
+	dat, err := s.Read()
 	if os.IsNotExist(err) || (err == nil && len(*dat) == 0) {
 		f, _ := os.Create(storagePath)
 		f.Close()
-		return Add(initialData)
+		return s.Add(initialData)
 	}
 	return err
 }
@@ -46,7 +55,7 @@ func parseFile(content []byte) (*data, error) {
 }
 
 // Read returns current persisted messages
-func Read() (*[]string, error) {
+func (s storage) Read() (*[]string, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
 	return readFile()
@@ -77,7 +86,7 @@ func makeJSON(messages []string) ([]byte, error) {
 }
 
 // Add persists a new message
-func Add(message string) error {
+func (s storage) Add(message string) error {
 	if len(message) == 0 {
 		return errors.New("Empty message")
 	}

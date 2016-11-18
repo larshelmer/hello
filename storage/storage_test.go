@@ -44,10 +44,11 @@ func TestParseFileFail(t *testing.T) {
 
 func TestRead(t *testing.T) {
 	//	t.SkipNow()
-	InitData(testPath)
+	s := storage{}
+	s.InitData(testPath)
 	want := data{[]string{initialData}}
 	defer os.Remove(testPath)
-	got, err := Read()
+	got, err := s.Read()
 	if err != nil {
 		t.Fatal(err.Error())
 	}

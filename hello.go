@@ -8,6 +8,14 @@ import (
 	"github.com/larshelmer/hello/v1_api"
 )
 
+// auth0
+// kibana
+// https://elithrar.github.io/article/testing-http-handlers-go/
+
+type env struct {
+	db storage.Datastore
+}
+
 func oldHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "hello %s", r.URL.Path[1:])
 	storage.Read()
@@ -21,8 +29,6 @@ func main() {
 	fmt.Println("starting...")
 
 	storage.InitData("")
-	storage.Add("message1")
-	storage.Add("message2")
 	v1api.InitEndpoints()
 
 	http.Handle("/", http.FileServer(http.Dir("static")))
