@@ -64,21 +64,23 @@ func TestReadGarbage(t *testing.T) {
 	json := []byte("asdf#!=\\")
 	ioutil.WriteFile(testPath, json, 0)
 	defer os.Remove(testPath)
-	InitData(testPath)
-	_, err := Read()
+	s := storage{}
+	s.InitData(testPath)
+	_, err := s.Read()
 	if err == nil {
 		t.Fatal("Read() expected error")
 	}
 }
 
 func TestReadEmptyFile(t *testing.T) {
-	InitData(testPath)
+	s := storage{}
+	s.InitData(testPath)
 	os.Remove(testPath)
 	f, _ := os.Create(testPath)
 	defer os.Remove(testPath)
 	f.Close()
 	var want []string
-	got, _ := Read()
+	got, _ := s.Read()
 	if len(*got) != len(want) {
 		t.Errorf("Read() == %q, want %q", got, want)
 	}
@@ -99,7 +101,8 @@ func TestMakeJSON(t *testing.T) {
 
 func TestAddEmpty(t *testing.T) {
 	//	t.SkipNow()
-	err := Add("")
+	s := storage{}
+	err := s.Add("")
 	if err == nil {
 		t.Error("Add(\"\") expected error")
 	}
@@ -107,26 +110,28 @@ func TestAddEmpty(t *testing.T) {
 
 func TestAdd(t *testing.T) {
 	in := "new motd"
-	InitData(testPath)
+	s := storage{}
+	s.InitData(testPath)
 	os.Remove(testPath)
 	f, _ := os.Create(testPath)
 	defer os.Remove(testPath)
 	f.Close()
-	err := Add(in)
+	err := s.Add(in)
 	if err != nil {
 		t.Errorf("Add(%q) == %q, want nil", in, err.Error())
 	}
 }
 
 func TestAddMany(t *testing.T) {
-	InitData(testPath)
+	s := storage{}
+	s.InitData(testPath)
 	defer os.Remove(testPath)
 	in1 := "motd1"
 	in2 := "motd2"
-	Add(in1)
-	Add(in2)
+	s.Add(in1)
+	s.Add(in2)
 	want := data{[]string{initialData, in1, in2}}
-	got, _ := Read()
+	got, _ := s.Read()
 	for ix := range want.Messages {
 		if want.Messages[ix] != (*got)[ix] {
 			t.Errorf("Read() == %q, want %q", got, want)
@@ -138,13 +143,14 @@ func TestInitData(t *testing.T) {
 	if _, err := os.Stat(testPath); err == nil {
 		os.Remove(testPath)
 	}
-	err := InitData(testPath)
+	s := storage{}
+	err := s.InitData(testPath)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.Remove(testPath)
 	want := []string{"quidquid Latine dictum sit altum videtur"}
-	dat, _ := Read()
+	dat, _ := s.Read()
 	if (*dat)[0] != want[0] {
 		t.Errorf("Read() == %q, want %q", *dat, want)
 	}
@@ -155,7 +161,8 @@ func TestInitDataGarbage(t *testing.T) {
 	json := []byte("asdf#!=\\")
 	ioutil.WriteFile(testPath, json, 0)
 	defer os.Remove(testPath)
-	err := InitData(testPath)
+	s := storage{}
+	err := s.InitData(testPath)
 	if err == nil {
 		t.Fatal("Read() expected error")
 	}

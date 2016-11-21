@@ -8,19 +8,24 @@ import (
 	"github.com/larshelmer/hello/storage"
 )
 
+type env struct {
+	db storage.Datastore
+}
+
 // InitEndpoints initializes handlers for all endpoints
-func InitEndpoints() {
-	http.HandleFunc("/v1/message/random", getRandomMessageHandler)
-	http.HandleFunc("/v1/message", messageHandler)
+func InitEndpoints(s storage.Datastore) {
+	env := &env{s}
+	http.HandleFunc("/v1/message/random", env.getRandomMessageHandler)
+	http.HandleFunc("/v1/message", env.messageHandler)
 }
 
 func getOpenAPIDefinition(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func messageHandler(w http.ResponseWriter, r *http.Request) {
+func (e *env) messageHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		dat, err := storage.Read()
+		dat, err := e.db.Read()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
@@ -40,22 +45,22 @@ func messageHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
 		defer r.Body.Close()
-		err = storage.Add(motd)
+		err = e.db.Add(motd)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		w.WriteHeader(http.StatusCreated)
 	} else {
-		http.Error(w, "", http.StatusMethodNotAllowed)
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 	}
 }
 
-func getRandomMessageHandler(w http.ResponseWriter, r *http.Request) {
+func (e *env) getRandomMessageHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		http.Error(w, "", http.StatusMethodNotAllowed)
 		return
 	}
-	dat, err := storage.Read()
+	dat, err := e.db.Read()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {

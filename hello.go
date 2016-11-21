@@ -12,13 +12,8 @@ import (
 // kibana
 // https://elithrar.github.io/article/testing-http-handlers-go/
 
-type env struct {
-	db storage.Datastore
-}
-
 func oldHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "hello %s", r.URL.Path[1:])
-	storage.Read()
 }
 
 func motdHandler(w http.ResponseWriter, r *http.Request) {
@@ -28,8 +23,10 @@ func motdHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	fmt.Println("starting...")
 
-	storage.InitData("")
-	v1api.InitEndpoints()
+	d := storage.Storage{}
+
+	d.InitData("")
+	v1api.InitEndpoints(d)
 
 	http.Handle("/", http.FileServer(http.Dir("static")))
 	//	http.HandleFunc("/old", oldHandler)

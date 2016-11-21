@@ -24,7 +24,7 @@ type Datastore interface {
 	Add(message string) error
 }
 
-type storage struct{}
+type Storage struct{}
 
 // Messages contains a list of all stored messages of the day
 type data struct {
@@ -32,7 +32,7 @@ type data struct {
 }
 
 // InitData initializes storage
-func (s storage) InitData(path string) error {
+func (s Storage) InitData(path string) error {
 	if len(path) > 0 {
 		storagePath = path
 	}
@@ -55,7 +55,7 @@ func parseFile(content []byte) (*data, error) {
 }
 
 // Read returns current persisted messages
-func (s storage) Read() (*[]string, error) {
+func (s Storage) Read() (*[]string, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
 	return readFile()
@@ -86,7 +86,7 @@ func makeJSON(messages []string) ([]byte, error) {
 }
 
 // Add persists a new message
-func (s storage) Add(message string) error {
+func (s Storage) Add(message string) error {
 	if len(message) == 0 {
 		return errors.New("Empty message")
 	}
