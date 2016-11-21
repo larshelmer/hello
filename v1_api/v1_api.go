@@ -19,10 +19,6 @@ func InitEndpoints(s storage.Datastore) {
 	http.HandleFunc("/v1/message", env.messageHandler)
 }
 
-func getOpenAPIDefinition(w http.ResponseWriter, r *http.Request) {
-
-}
-
 func (e *env) messageHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		dat, err := e.db.Read()
@@ -64,13 +60,17 @@ func (e *env) getRandomMessageHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
-		ix := rand.Int() % len(*dat)
-		js, err := json.Marshal((*dat)[ix])
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		if len(*dat) == 0 {
+			w.WriteHeader(http.StatusNoContent)
 		} else {
-			w.Header().Set("Content-Type", "application/json")
-			w.Write(js)
+			ix := rand.Int() % len(*dat)
+			js, err := json.Marshal((*dat)[ix])
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			} else {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write(js)
+			}
 		}
 	}
 }
