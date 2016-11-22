@@ -11,6 +11,7 @@ import (
 // auth0
 // kibana
 // https://elithrar.github.io/article/testing-http-handlers-go/
+// http://jsonapi.org
 
 func oldHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "hello %s", r.URL.Path[1:])
