@@ -29,7 +29,7 @@ func main() {
 	v1api.InitEndpoints(d)
 
 	http.Handle("/", http.FileServer(http.Dir("static")))
-	//	http.HandleFunc("/old", oldHandler)
+	http.HandleFunc("/old", oldHandler)
 	//	http.HandleFunc("/motd", motdHandler)
 	http.ListenAndServe(":8080", nil)
 	fmt.Println("stopping...")

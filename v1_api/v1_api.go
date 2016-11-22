@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"math/rand"
 	"net/http"
+	"strconv"
 
 	"github.com/larshelmer/hello/storage"
 )
@@ -12,26 +13,68 @@ type env struct {
 	db storage.Datastore
 }
 
+var (
+	messageURL       = "/v1/message/"
+	randomMessageURL = "/v1/message/random"
+)
+
 // InitEndpoints initializes handlers for all endpoints
 func InitEndpoints(s storage.Datastore) {
 	env := &env{s}
-	http.HandleFunc("/v1/message/random", env.getRandomMessageHandler)
-	http.HandleFunc("/v1/message", env.messageHandler)
+	http.HandleFunc(randomMessageURL, env.getRandomMessageHandler)
+	http.HandleFunc(messageURL, env.messageHandler)
+}
+
+func (e *env) getAllMessages(w http.ResponseWriter) {
+	dat, err := e.db.Read()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	} else {
+		js, err := json.Marshal(*dat)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		} else {
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(js)
+		}
+	}
+}
+
+func (e *env) getOneMessage(w http.ResponseWriter, r *http.Request, id string) {
+	i, err := strconv.Atoi(id)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	if i < 0 {
+		http.NotFound(w, r)
+		return
+	}
+	dat, err := e.db.Read()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if i < len(*dat) {
+		js, err := json.Marshal((*dat)[i])
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		} else {
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(js)
+		}
+	} else {
+		http.NotFound(w, r)
+	}
 }
 
 func (e *env) messageHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		dat, err := e.db.Read()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		id := r.URL.Path[len(messageURL):]
+		if len(id) == 0 {
+			e.getAllMessages(w)
 		} else {
-			js, err := json.Marshal(*dat)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			} else {
-				w.Header().Set("Content-Type", "application/json")
-				w.Write(js)
-			}
+			e.getOneMessage(w, r, id)
 		}
 	} else if r.Method == "POST" {
 		decoder := json.NewDecoder(r.Body)
